@@ -8,11 +8,11 @@ def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
 pkgs = ['networkx', 'pathlib','flask']
-for lib in modnames:
+for lib in pkgs:
     try:
         globals()[lib] = importlib.import_module(lib)
     except ImportError:
-        install(package)
+        install(lib)
 
 #import networkx as nx
 from networkx.readwrite import json_graph
