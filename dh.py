@@ -45,10 +45,10 @@ def cleanFiles(folder):
 	            shutil.rmtree(file_path)
 	    except Exception as e:
 	        print('Failed to delete %s. Reason: %s' % (file_path, e))
-"""folder = './html/'
+folder = './html/'
 cleanFiles(folder)
 folder = './tmp/'
-cleanFiles(folder)"""
+cleanFiles(folder)
 ##
 clear = lambda: os.system('cls') #on Windows System
 clear()
@@ -331,6 +331,10 @@ def DH(graph,cooling,lambda1,lambda2,lambda3,lambda4):
 		#questa azione è compiuta su tutti i nodi
 		p=0
 		while(p<numNodes):
+			progresso=str(phase/(saPhases+ftPhases)+p/(numNodes*10))
+			progFile= open('progress.properties',"w+")
+			progFile.write(progresso)
+			progFile.close()
 			v=nodesNum[p]#prendo il p-esimo nodo, v
 			shuffle(proveNum)#mischio il vettore di numeri da 0 a 29
 			t=0
@@ -379,7 +383,20 @@ def DH(graph,cooling,lambda1,lambda2,lambda3,lambda4):
 @app.route('/index.html')
 def index():
 	if request.method == 'POST':
+		print("======================0======================")
+		print("======================0======================")
+		print("======================0======================")
+		print("======================0======================")
 		storage=request.json['file']
+		"""print(storage.text)
+		print(storage)
+		print(storage)
+		print(storage)
+		print(storage)
+		print("======================1======================")
+		print("======================1======================")
+		print("======================1======================")
+		print("======================1======================")"""
 		data=json.loads(storage)
 		cooling=request.json['cooling']
 		lambda1=request.json['l1']
@@ -392,7 +409,7 @@ def index():
 		lambda2=float(lambda2.strip('"'))
 		lambda3=float(lambda3.strip('"'))
 		lambda4=float(lambda4.strip('"'))
-
+		print("======================A======================")
 		links=data['links']
 		nodes=data['nodes']
 		id2num={}
@@ -414,6 +431,7 @@ def index():
 		minx=distanceFromBorder
 		miny=distanceFromBorder
 		maxX=0
+		maxY=0
 		for f in fPos:
 			if(f[0]<minx):
 				minx=f[0]
@@ -421,6 +439,8 @@ def index():
 				miny=f[1]
 			if(f[0]>maxX):
 				maxX=f[0]
+			if(f[1]>maxY):
+				maxY=f[1]
 		i=0
 		newNodes=[]
 		for n in nodes:
@@ -457,8 +477,14 @@ def index():
 		saveConfiguration(filename,newData)
 		fileContent = Path('parentServer.html').read_text()
 		fileContent=fileContent.replace("@@@@@@", filename+".json")
-		imgPos=maxX+abs(distanceFromBorder-minx)+250
-		fileContent=fileContent.replace("####", str(imgPos))
+		imgPosX=maxX+abs(distanceFromBorder-minx)+80
+		imgPosY=((maxY+miny)+abs(distanceFromBorder-miny))/2
+		print(str(imgPosX))
+		print("=======================")
+		print(str(imgPosY))
+		print("=======================")
+		fileContent=fileContent.replace("####", str(imgPosX))
+		fileContent=fileContent.replace("###", str(imgPosY))
 		html= open('./templates/'+filename+'.html',"w+")
 		html.write(fileContent)
 		html.close()
@@ -496,9 +522,15 @@ def graphml():
   G=networkx.read_graphml('./tmp/graph.graphml')
   data = json_graph.node_link_data(G)
   print(data)
-  return data
+  return jsonify(data)
+@app.route('/progress')
+def progress():
+  print("progress")
+  progress=Path('progress.properties').read_text()
+  return progress
+
 if __name__ == "__main__":
-    app.run()
+  app.run(threaded=True)#(port=5001)#
 
 
     

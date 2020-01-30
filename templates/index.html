@@ -43,14 +43,14 @@ else{
 var link = document.createElement('link');
 link.rel = "stylesheet"
 link.href = "{{ url_for('static', filename='styles/bootstrap.min.css') }}"
-//https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css
 document.head.appendChild(link);
-document.head.append(jqueryscript);
-document.head.append(fontawesomescript);
-document.head.append(popperscript);
-document.head.append(bootstrapscript);
-document.head.append(bootstrapcss);
-window.onload=function(){if(document.getElementById("files").files.length > 0){$('#genera').prop('disabled', false)}}
+document.head.appendChild(jqueryscript);
+document.head.appendChild(fontawesomescript);
+document.head.appendChild(popperscript);
+document.head.appendChild(bootstrapscript);
+document.head.appendChild(bootstrapcss);
+
+
 </script>
 <body>
 
@@ -64,9 +64,11 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
   </div>
 </div>
 
-
-<table class="table table-borderless table-dark" style="max-width: none;">
+<!-- <div class="container"> -->
+  <div class="container">
+<table class="table table-borderless table-dark">
 <tbody>
+  <!-- <tr><td>a&nbsp;</td><td>b&nbsp;</td><td>c&nbsp;</td><td>dyrttttttttttttttttttttt&nbsp;</td></tr> -->
     <tr>
     <td>&nbsp;</td>
 <td>File</td>
@@ -75,28 +77,38 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
     <tr>
     <td>&nbsp;</td>
     <td>Cooling</td>
-      <td><input type="number" min="0.01" max="0.99" value="0.75" step=".01" name="cooling" id="cooling"/></td>
+      <td><input type="number" min="0.01" max='0.99' value="0.75" step=".01" name="cooling" id="cooling"/></td>
     </tr>
     <tr>
 <td>&nbsp;</td>
 <td>Distanza tra nodi</td>
-<td><input type="number" min="0" value="10000" name="l1" id="l1"/></td>
+<td><input type="text" min="0" value="10000" name="l1" id="l1"/></td>
     </tr>
     <tr>
 <td>&nbsp;</td>
 <td>Lunghezza degli archi</td>
-<td><input type="number" min="0.0000000000000000" name="l2" step=".0000000000000001" id="l2"/></td>
+<td><input type="text" name="l2" id="l2"/></td>
     </tr>
     <tr>
 <td>&nbsp;</td>
 <td>Numero di incroci</td>
-<td><input type="number" min="0.000000000000000" name="l3" step=".000000000000001" id="l3"/></td>
+<td><input type="text" min="0" name="l3" step=".000000000000001" id="l3"/></td>
     </tr>
 <td>&nbsp;</td>
 <td>Distanza nodo-archi confinanti</td>
-<td><input type="number" min="0.000000000000000" name="l4" step=".000000000000001" id="l4"/></td>
+<td><input type="text" min="0" name="l4" step=".000000000000001" id="l4"/></td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>Numero di rappresentazioni finali</td>
+<td><select name="numR" id="numR">
+  <option selected>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select></td>
     </tr>
-    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
 </table>
 <div class="container">
@@ -106,9 +118,9 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
     </div>
   </div>
 </div>
-</table><input type="hidden" name="filecontent" id="filecontent"/>
+</table></div><input type="hidden" name="filecontent" id="filecontent"/>
 <br>
-<div><p style="padding-left: 50px;">Il web server Flask è in grado di servire una richiesta per volta</p></div>
+<!-- <div><p style="padding-left: 50px;">Il web server Flask è in grado di servire una richiesta per volta</p></div> -->
 <!-- Modal -->
 <div class="modal fade" id="infoMod" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -128,8 +140,9 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
     </div>
   </div>
 </div>
-
-
+<div class="container" id="progressbarcont">
+ 
+</div>
 <!-- </form> -->
 <script>
 
@@ -141,18 +154,19 @@ function handleFileSelect(evt) {
   //console.log(typeof(file.name));
   reader.onload = function(e) {
   rawgraph = reader.result;
-  //console.log(file.name)
+  console.log(file.name)
+  console.log(typeof(file.name))
   if(file.name.endsWith('.graphml')){
+    //alert("ml");
     console.log(typeof rawgraph)
       $.ajax({
       type: "POST",
       url: '/graphml',//'http://localhost:5000/dh.py',
-      //dataType: 'json',
-      type: 'post',
+      dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify( { "file": rawgraph} ),
       success: function(resp){
-        console.log(resp)
+        //console.log(resp)
         document.getElementById('filecontent').value=JSON.stringify(resp)
         graph=resp
         links=graph.links
@@ -165,8 +179,7 @@ function handleFileSelect(evt) {
         $('#genera').prop('disabled', false)
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
-      document.getElementById("mbody").innerHTML='Errore nella comunicazione con il server'
-	  $("#infoMod").modal()	
+      alert("Errore nella comunicazione con il server");
       console.log(textStatus)
       console.log(errorThrown)
       }
@@ -188,32 +201,87 @@ function handleFileSelect(evt) {
   }
   }
 }
+function checkElements(){
+inputs=document.getElementsByTagName('input');
+for(i=0;i<inputs.length;i++){
+  curri=inputs[i]
+  if(curri.type=='text' && isNaN(curri.value)){
+    console.log(curri)
+    return false;
+  }
+}
+return true;
+}
+function updateProgress(now){
+  console.log("update")
+  $.get( "/progress", function( data ) {
+  nowUp=parseInt(data*100)
+  //nowUp=now+25
+  console.log(now+'%');
+  if(nowUp>now){
+    text='<div class="progress"><div class="progress-bar" role="progressbar" style="width: '+nowUp+'%" aria-valuenow="'+nowUp+'" aria-valuemin="0" aria-valuemax="100"></div></div>'//+'<p>'+now+'%</p>'
+  document.getElementById('progressbarcont').innerHTML=text
+  }
+  setTimeout(function(){updateProgress(nowUp);}, 1000);
+}).fail(function(XMLHttpRequest, textStatus, errorThrown) {
+    console.log( "error" );
+    console.log(textStatus)
+    console.log(errorThrown)
+
+  });
+}
+function sendPost(){
+  ttt=JSON.stringify( { "file": JSON.stringify($("#filecontent").val())})
+  console.log(ttt)
+  console.log(typeof(ttt))
+  $.ajax({
+  type: "POST",
+  url: '/',//'http://localhost:5000/dh.py',
+  //dataType: 'json',
+  type: 'post',
+  contentType: 'application/json',
+  data: JSON.stringify( { "file": $("#filecontent").val(),"cooling": JSON.stringify($("#cooling").val()),"l1": JSON.stringify($("#l1").val()),"l2": JSON.stringify($("#l2").val()),"l3": JSON.stringify($("#l3").val()),"l4": JSON.stringify($("#l4").val())} ),
+  success: function(resp){
+    console.log("tutto ok")
+    document.getElementById('progressbarcont').innerHTML=""//resetto la barra
+    window.open('http://localhost:5000/?f='+resp+".html")
+    //window.location.href='http://localhost:5000/?f='+resp+".html"
+  },
+  error: function(XMLHttpRequest, textStatus, errorThrown) {
+  alert("Errore nella comunicazione con il server");
+  console.log(textStatus)
+  console.log(errorThrown)
+  }
+  })
+}
+//window.onload=function(){window.setInterval(updateProgress(),1000);}
 function invia(el){
+controllo=checkElements();
+if(!controllo){
+  alert("I parametri devono essere numerici");
+  return false
+}
+
+
+//throw("stop")
 el.disabled=true
 document.getElementById("mbody").innerHTML='Il grafo verrà elaborato.<br>Al termine sarà possibile visualizzarlo'
 $("#infoMod").modal()
-$.ajax({
-type: "POST",
-url: '/',//'http://localhost:5000/dh.py',
-//dataType: 'json',
-type: 'post',
-contentType: 'application/json',
-data: JSON.stringify( { "file": $("#filecontent").val(),"cooling": JSON.stringify($("#cooling").val()),"l1": JSON.stringify($("#l1").val()),"l2": JSON.stringify($("#l2").val()),"l3": JSON.stringify($("#l3").val()),"l4": JSON.stringify($("#l4").val())} ),
-success: function(resp){
-  window.location.href='http://localhost:5000/?f='+resp+".html"
-},
-error: function(XMLHttpRequest, textStatus, errorThrown) {
-document.getElementById("mbody").innerHTML='Errore nella comunicazione con il server'
-$("#infoMod").modal()	
-console.log(textStatus)
-console.log(errorThrown)
+numR=document.getElementById('numR').value;
+console.log("numR: "+numR)
+for(i=0;i<numR;i++){
+sendPost();
 }
-})
+updateProgress(0)
 }
 function get(name){
   if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
      return decodeURIComponent(name[1]);
 }
+String.prototype.endsWith = function(pattern) {
+  var d = this.length - pattern.length;
+  return d >= 0 && this.lastIndexOf(pattern) === d;
+};
 </script>
 </body>
 </html>
