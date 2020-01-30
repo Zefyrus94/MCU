@@ -1,0 +1,304 @@
+<!-- python -m http.server 9000
+http://localhost:9000 -->
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+  .logo {
+  position: relative;
+  left: 90em;
+  top: 20em;
+}
+.zoom:hover {
+  -ms-transform: scale(1.5); /* IE 9 */
+  -webkit-transform: scale(1.5); /* Safari 3-8 */
+  transform: scale(1.5); 
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
+</head>
+<body>
+
+<script>
+var d3script = document.createElement("script");
+d3script.type = "text/javascript";
+
+var jqueryscript = document.createElement("script");
+jqueryscript.type = "text/javascript";
+
+var fontawesomescript=document.createElement("script");
+fontawesomescript.type = "text/javascript";
+
+online=navigator.onLine
+console.log(online)
+if (online){
+  d3script.src = "https://d3js.org/d3.v3.min.js";
+  
+  jqueryscript.src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js";
+
+  fontawesomescript.src = "https://use.fontawesome.com/releases/v5.12.0/js/all.js"
+}  
+else{
+  d3script.src = "{{ url_for('static', filename='js/d3.min.js') }}";
+  jqueryscript.src = "{{ url_for('static', filename='js/jquery.min.js') }}";
+  fontawesomescript.src = "{{ url_for('static', filename='js/fontawesome-free-5.12.0-web/js/all.js') }}"
+}
+document.head.append(d3script);
+document.head.append(jqueryscript);
+document.head.append(fontawesomescript);
+
+//setTimeout(function(){
+window.onload=function(){
+ var c10 = d3.scale.category10();
+ var svg = d3.select("body")
+   .append("svg")
+   .attr("width", 3000)
+   .attr("height", 2000)
+   .attr('id','capture');
+  svg.append('image')
+  .attr('xlink:href','')
+  .attr('height',300)
+  .attr('width',300)
+  .attr('id','detail')
+  .attr('x',2000)
+  .attr('y',300)
+  .attr('opacity',0)
+  svg.append("text")
+  .attr("dx", ####)
+  .attr("dy", 450)
+  .attr("id", "tImgB")
+  .style("font-size", "34px")
+  .text('')
+
+path="/?g=t&f=@@@@@@"
+original=get('o');  
+if(original)
+  path="graph_o.json"
+d3.json(path, function(error, graph) {
+  if (error) throw error;
+  
+  data=graph;
+ var drag = d3.behavior.drag()
+
+ var links = svg.selectAll("link")
+   .data(data.links)
+   .enter()
+   .append("line")
+   .attr("class", "link")
+   .attr("id", function(d,i){return d.id;})
+   .attr("x1", function(l) {
+     var sourceNode = data.nodes.filter(function(d, i) {
+       return d.id == l.source
+     })[0];
+     d3.select(this).attr("y1", sourceNode.y);
+     return sourceNode.x
+   })
+   .attr("x2", function(l) {
+     var targetNode = data.nodes.filter(function(d, i) {
+       return d.id == l.target
+     })[0];
+     d3.select(this).attr("y2", targetNode.y);
+     return targetNode.x
+   })
+   .attr("fill", "none")
+   .attr("stroke", "gray");
+giec=null;
+var appo=svg.selectAll("node")
+   .data(data.nodes)
+   .enter()
+   .append("g");
+   /*appo.append("text")
+              .attr("dx", function(d,i){return d.x})
+              .attr("dy", function(d,i){return d.y})
+              .attr("class", function(){return "text"})
+             .text(function(d){return d.name;})
+              .on("click", function(d,i) {
+              alert("on click " + i); 
+          });*/
+ prepended=false
+ var clicked=false
+ var idIClicked=''
+ var nodes = appo
+   .append("circle")
+   .attr("class", "node")
+   .attr("cx", function(d) {
+     return d.x
+   })
+   .attr("cy", function(d) {
+     return d.y
+   })
+   .attr("r", 10)
+   .attr("opacity", 1)
+   .attr("fill", function(d, i) {
+    if(d.type=="hero")
+      return "magenta";
+    else
+      return "cyan";
+     //return c10(i);
+   })
+   .attr("id", function(d) {
+     return d.id
+   })
+   .call(drag)
+   .on("mouseover", function(d,i) {
+    var thisNode = d.id;
+    adj=getAdiacentNodes(thisNode,data.links);
+    d3.selectAll(".node").attr("r", 10);
+    d3.select(this).attr("r", 15);
+      for(i=0;i<adj.length;i++){
+        if($('#'+adj[i]).siblings().length!=0){
+          $('#'+adj[i]).siblings()[0].style='opacity:1';
+        }
+      }
+      if($('#'+this.id).siblings().length!=0)
+        $('#'+this.id).siblings()[0].style='opacity:1';
+      
+      links.attr("opacity", function(d) {
+          return (d.source == thisNode || d.target == thisNode) ? 1 : 0.1
+      });
+      //opacità ai nodi escluso se stesso e gli adiacenti (da fare)
+      nodes.attr("opacity", function(d) {
+        return isIncluded(adj,d.id)?1:0.1
+      });
+     
+    
+    })
+    .on("mouseout", function(d,i) {
+    d3.selectAll(".node").attr("r", 10);
+    links.attr("opacity", 1);
+    nodes.attr("opacity", 1);
+    }).append("title").text(function(d){return d.name});
+    svg.selectAll('images')
+                    .data(data.nodes)
+                    .enter().append('image')
+                    .attr('xlink:href',function(d){
+                      id=d.id
+                      param=28
+                      if(d.type=='movie')
+                        id=id-param
+                      path='img?id='+d.type.substr(0,1)+id+'.png';
+                      return path;})
+                    .attr('height',52)
+                    .attr('width',52)
+                    .attr('class',"image")
+                    //.attr("class","zoom")
+                    //.attr("idI","zoom")
+                    .attr('id',function(d,i){return 'i'+d.id;})
+                    .attr('x',function(d){return d.x-26;})
+                    .attr('y',function(d){return d.y-26;})
+   .on("mouseover", function(d,i) {
+    if(!clicked){
+      mouseOverImage(d,i,links)
+    }})
+    .on("mouseout", function(d,i) {
+    if(!clicked){
+    d3.select("#detail")
+    .attr('xlink:href','')
+    .attr('opacity',0)
+     d3.select("#tImgB")
+     .text('')
+    svg.selectAll('.image')
+    .attr('height',52)
+    .attr('width',52)
+    .attr("opacity", 1);
+    links.attr("opacity", 1);
+    }})
+    .on("click", function(d,i) {
+      
+        if(!clicked || idIClicked==d.id){
+          console.log("if")
+          clicked=!clicked
+        }
+        else{
+          console.log("ic: "+idIClicked)
+          console.log("in: "+d.id)
+          console.log("else")
+          mouseOverImage(d,i,links)
+        }
+        idIClicked=d.id
+      })
+    .append("title").text(function(d){return d.name})
+  
+})
+
+    //do what you need here
+}
+function mouseOverImage(d,i,links){
+  d3.selectAll(".node").attr("opacity", 0)
+    thisNode=d.id;
+    urlImg=d3.select('#i'+d.id)[0][0].href.baseVal
+    detail=d3.select("#detail")
+    detail
+    .attr('xlink:href',urlImg)
+    .attr('opacity',1)
+    d3.select("#tImgB")
+    .text(d.name)
+    if(!prepended)
+      $('#logoA').prepend("<img src='../img/"+thisNode+".png'/>")
+    prepended=true
+    d3.selectAll(".image").attr("opacity", 0);
+    adj=getAdiacentNodes(thisNode,data.links);  
+    for(i=0;i<adj.length;i++){
+      d3.select("#i"+adj[i]).attr('height',60).attr('width',60).attr("opacity", 1);
+    }
+      links.attr("opacity", function(d) {
+        return (d.source == thisNode || d.target == thisNode) ? 1 : 0.1
+      });
+
+    
+}
+function get(name){
+   if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
+      return decodeURIComponent(name[1]);
+}
+    function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+function getAdiacentNodes(idS,links){
+  res=[];
+  res.push(idS);
+  for(i=0;i<links.length;i++){
+    idSL=links[i]['source'];
+    if(idS==idSL){
+      idTL=links[i]['target'];
+      res.push(idTL);
+    }
+    else{
+      idTL=links[i]['target'];
+      if(idS==idTL){
+        res.push(idSL);
+      }
+    }
+  }
+  return res;
+}
+function isIncluded(arr,el){
+  for(i=0;i<arr.length;i++){
+    if(arr[i]==el)
+      return true;
+  }
+  return false;
+}
+function saveScreenshot(el){
+el.style.color = "#66c144"
+d3.selectAll(".node").attr("opacity",1)
+html2canvas(document.querySelector("#capture")).then(canvas => {
+    //document.body.appendChild(canvas)
+    d3.selectAll(".node").attr("opacity",0)
+    var img    = canvas.toDataURL("image/png")
+    window.open(img)
+});
+
+
+}
+   </script>
+<div style="float:right">
+  <p>
+    <i class="fas fa-camera fa-3x" id="cameraPic" onclick="saveScreenshot(this)">
+      
+    </i>
+  </p>
+</div>
+</body>
+</html>
