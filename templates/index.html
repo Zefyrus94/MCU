@@ -1,0 +1,219 @@
+<html>
+<head>
+
+</head>
+<script>
+var jqueryscript = document.createElement("script");
+jqueryscript.type = "text/javascript";
+
+var fontawesomescript=document.createElement("script");
+fontawesomescript.type = "text/javascript";
+
+var popperscript=document.createElement("script");
+popperscript.type = "text/javascript";
+
+var bootstrapscript=document.createElement("script");
+bootstrapscript.type = "text/javascript";
+
+var bootstrapcss = document.createElement("link");
+
+online=navigator.onLine
+console.log(online)
+if (online){
+  jqueryscript.src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js";
+
+  fontawesomescript.src = "https://use.fontawesome.com/releases/v5.12.0/js/all.js"
+
+  popperscript.src = "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+
+  bootstrapscript.src = "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+
+  bootstrapcss.src = "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+ 
+}  
+else{
+  jqueryscript.src = "{{ url_for('static', filename='js/jquery.min.js') }}";
+  fontawesomescript.src = "{{ url_for('static', filename='js/fontawesome-free-5.12.0-web/js/all.js') }}"
+  popperscript.src = "{{ url_for('static', filename='js/popper.min.js') }}"
+  bootstrapscript.src = "{{ url_for('static', filename='js/bootstrap.min.js') }}"
+  bootstrapcss.src = "{{ url_for('static', filename='css/bootstrap.min.css') }}"
+ 
+   
+}
+var link = document.createElement('link');
+link.rel = "stylesheet"
+link.href = "{{ url_for('static', filename='styles/bootstrap.min.css') }}"
+//https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css
+document.head.appendChild(link);
+document.head.append(jqueryscript);
+document.head.append(fontawesomescript);
+document.head.append(popperscript);
+document.head.append(bootstrapscript);
+document.head.append(bootstrapcss);
+window.onload=function(){if(document.getElementById("files").files.length > 0){$('#genera').prop('disabled', false)}}
+</script>
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="col text-center">
+<h3>Progetto di visualizzazione delle informazioni<br>
+Autore: Giacomo Bonanni<br>
+L'algoritmo utilizzato è Davidson Harel DH-96</h3>
+    </div>
+  </div>
+</div>
+
+
+<table class="table table-borderless table-dark" style="max-width: none;">
+<tbody>
+    <tr>
+    <td>&nbsp;</td>
+<td>File</td>
+<td><input type="file" id="files" name="file" accept=".json,.graphml"/></td>
+    </tr>
+    <tr>
+    <td>&nbsp;</td>
+    <td>Cooling</td>
+      <td><input type="number" min="0.01" max="0.99" value="0.75" step=".01" name="cooling" id="cooling"/></td>
+    </tr>
+    <tr>
+<td>&nbsp;</td>
+<td>Distanza tra nodi</td>
+<td><input type="number" min="0" value="10000" name="l1" id="l1"/></td>
+    </tr>
+    <tr>
+<td>&nbsp;</td>
+<td>Lunghezza degli archi</td>
+<td><input type="number" min="0.0000000000000000" name="l2" step=".0000000000000001" id="l2"/></td>
+    </tr>
+    <tr>
+<td>&nbsp;</td>
+<td>Numero di incroci</td>
+<td><input type="number" min="0.000000000000000" name="l3" step=".000000000000001" id="l3"/></td>
+    </tr>
+<td>&nbsp;</td>
+<td>Distanza nodo-archi confinanti</td>
+<td><input type="number" min="0.000000000000000" name="l4" step=".000000000000001" id="l4"/></td>
+    </tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+  </tbody>
+</table>
+<div class="container">
+  <div class="row">
+    <div class="col text-center">
+      <button class="btn btn-default" onclick="invia(this)" id="genera" disabled="disabled">Genera il grafo</button>
+    </div>
+  </div>
+</div>
+</table><input type="hidden" name="filecontent" id="filecontent"/>
+<br>
+<div><p style="padding-left: 50px;">Il web server Flask è in grado di servire una richiesta per volta</p></div>
+<!-- Modal -->
+<div class="modal fade" id="infoMod" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Attenzione</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div id="mbody" class="modal-body">
+       
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- </form> -->
+<script>
+
+document.getElementById('files').addEventListener('change', handleFileSelect, false);
+function handleFileSelect(evt) {
+  file = evt.target.files[0];  
+  reader = new FileReader();
+  reader.readAsText(file);
+  //console.log(typeof(file.name));
+  reader.onload = function(e) {
+  rawgraph = reader.result;
+  //console.log(file.name)
+  if(file.name.endsWith('.graphml')){
+    console.log(typeof rawgraph)
+      $.ajax({
+      type: "POST",
+      url: '/graphml',//'http://localhost:5000/dh.py',
+      //dataType: 'json',
+      type: 'post',
+      contentType: 'application/json',
+      data: JSON.stringify( { "file": rawgraph} ),
+      success: function(resp){
+        console.log(resp)
+        document.getElementById('filecontent').value=JSON.stringify(resp)
+        graph=resp
+        links=graph.links
+        nodes=graph.nodes
+        density=links.length/(nodes.length*(nodes.length-1))
+        document.getElementById('l2').value=(density/1000).toFixed(16)
+        //console.log(density/1000)
+        document.getElementById('l3').value=(10-Math.sqrt(density)).toFixed(15)
+        document.getElementById('l4').value=((40-density)/5).toFixed(15)
+        $('#genera').prop('disabled', false)
+      },
+      error: function(XMLHttpRequest, textStatus, errorThrown) {
+      document.getElementById("mbody").innerHTML='Errore nella comunicazione con il server'
+	  $("#infoMod").modal()	
+      console.log(textStatus)
+      console.log(errorThrown)
+      }
+      })
+  }
+  else{
+  document.getElementById('filecontent').value=rawgraph
+  graph = JSON.parse(rawgraph);
+ 
+ 
+  links=graph.links
+  nodes=graph.nodes
+  density=links.length/(nodes.length*(nodes.length-1))
+  document.getElementById('l2').value=(density/1000).toFixed(16)
+  //console.log(density/1000)
+  document.getElementById('l3').value=(10-Math.sqrt(density)).toFixed(15)
+  document.getElementById('l4').value=((40-density)/5).toFixed(15)
+  $('#genera').prop('disabled', false)
+  }
+  }
+}
+function invia(el){
+el.disabled=true
+document.getElementById("mbody").innerHTML='Il grafo verrà elaborato.<br>Al termine sarà possibile visualizzarlo'
+$("#infoMod").modal()
+$.ajax({
+type: "POST",
+url: '/',//'http://localhost:5000/dh.py',
+//dataType: 'json',
+type: 'post',
+contentType: 'application/json',
+data: JSON.stringify( { "file": $("#filecontent").val(),"cooling": JSON.stringify($("#cooling").val()),"l1": JSON.stringify($("#l1").val()),"l2": JSON.stringify($("#l2").val()),"l3": JSON.stringify($("#l3").val()),"l4": JSON.stringify($("#l4").val())} ),
+success: function(resp){
+  window.location.href='http://localhost:5000/?f='+resp+".html"
+},
+error: function(XMLHttpRequest, textStatus, errorThrown) {
+document.getElementById("mbody").innerHTML='Errore nella comunicazione con il server'
+$("#infoMod").modal()	
+console.log(textStatus)
+console.log(errorThrown)
+}
+})
+}
+function get(name){
+  if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
+     return decodeURIComponent(name[1]);
+}
+</script>
+</body>
+</html>
