@@ -1,0 +1,2 @@
+Si ringrazia la libreria igraph per le indicazioni sul settaggio dei parametri per l'algoritmo DH96 e per aver suggerito l'idea più fluida
+di calcolo di un numero ampio di posizioni possibili per ogni nodo
