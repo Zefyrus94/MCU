@@ -37,8 +37,6 @@ def get_size(start_path = 'templates/'):
 
 
 def cleanFiles(path,maxNumFiles,excluded):
-	#path = r"templates/"
-	homeP='templates/index.html'
 	now = time.time()
 	twoDays=now - 2 * 86400
 	filesList=[]
@@ -58,7 +56,7 @@ def cleanFiles(path,maxNumFiles,excluded):
 				counterP=f.replace("json", "html")
 			if(os.path.isfile(counterP)):
 				os.remove(counterP)
-			os.remove(f)	
+			os.remove(f)
 		if(numFiles<maxNumFiles):
 			break
 
@@ -513,8 +511,8 @@ def cprogress():
 	progress= open('progress.properties',"w+")
 	progress.write('0')
 	progress.close()
-	cleanFiles('html/',10,'')
-	cleanFiles('tmp/',10,'')
+	cleanFiles('html/',10,'noRestrict')
+	cleanFiles('tmp/',10,'noRestrict')
 	cleanFiles("templates/",10,'index.html')
 	return "cancellazione ok"
 if __name__ == "__main__":

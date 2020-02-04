@@ -240,6 +240,7 @@ function sendPost(){
   data: JSON.stringify( { "file": $("#filecontent").val(),"cooling": JSON.stringify($("#cooling").val()),"l1": JSON.stringify($("#l1").val()),"l2": JSON.stringify($("#l2").val()),"l3": JSON.stringify($("#l3").val()),"l4": JSON.stringify($("#l4").val())} ),
   success: function(resp){
     toFinish=false
+    $("#infoMod").modal('hide')//nascondo la modal
     document.getElementById('genera').disabled=false
     document.getElementById('progressbarcont').innerHTML=""//resetto la barra
     cleanProgress()//resetto il file di progresso
@@ -259,7 +260,7 @@ controllo=checkElements();
 if(!controllo){
   mesg="I parametri devono essere numerici"
   document.getElementById("mbody").innerHTML=mesg
-  $("#infoMod").modal()
+  $("#infoMod").modal('show')
   return false
 }
 
@@ -267,7 +268,7 @@ if(!controllo){
 //throw("stop")
 el.disabled=true
 document.getElementById("mbody").innerHTML='Il grafo verrà elaborato.<br>Al termine sarà possibile visualizzarlo'
-$("#infoMod").modal()
+$("#infoMod").modal('show')
 /*numR=document.getElementById('numR').value;
 for(i=0;i<numR;i++){*/
 sendPost();
