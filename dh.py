@@ -14,11 +14,8 @@ for lib in pkgs:
     except ImportError:
         install(lib)
 
-#import networkx as nx
 from networkx.readwrite import json_graph
 from random import uniform,randint,shuffle
-#import numpy
-#from numpy import linalg as LA
 import math as Math
 import json
 import os
@@ -27,31 +24,52 @@ import time
 import shutil
 import datetime
 from flask import Flask, render_template, request, jsonify,send_file
-#from flask_cors import CORS
 
-#app = Flask(__name__)
-#CORS(app)
 app = Flask(__name__)
 
+def get_size(start_path = 'templates/'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size
 
-###CLEAN
-def cleanFiles(folder):
-	for filename in os.listdir(folder):
-	    file_path = os.path.join(folder, filename)
-	    try:
-	        if os.path.isfile(file_path) or os.path.islink(file_path):
-	            os.unlink(file_path)
-	        elif os.path.isdir(file_path):
-	            shutil.rmtree(file_path)
-	    except Exception as e:
-	        print('Failed to delete %s. Reason: %s' % (file_path, e))
-folder = './html/'
-cleanFiles(folder)
-folder = './tmp/'
-cleanFiles(folder)
+
+def cleanFiles(path,maxNumFiles,excluded):
+	#path = r"templates/"
+	homeP='templates/index.html'
+	now = time.time()
+	twoDays=now - 2 * 86400
+	filesList=[]
+	for f in os.listdir(path):
+		filesList.append(f)
+	filesList.sort(key=lambda x: os.stat(os.path.join(path, x)).st_mtime)
+	
+	for f in filesList:
+		f = os.path.join(path, f)
+		numFiles=len([name for name in os.listdir(path) if os.path.isfile(os.path.join(path, name))])
+		if(os.path.isfile(f) and excluded not in f and (os.stat(f).st_mtime < twoDays or numFiles>=maxNumFiles)):
+			#os.remove(f)
+			counterP=''
+			if("html" in f):
+				counterP=f.replace("html", "json")
+			elif("json" in f):
+				counterP=f.replace("json", "html")
+			if(os.path.isfile(counterP)):
+				os.remove(counterP)
+			os.remove(f)	
+		if(numFiles<maxNumFiles):
+			break
+
+cleanFiles('html/',10,'')
+cleanFiles('tmp/',10,'')
+cleanFiles("templates/",10,'index.html')
 ##
 clear = lambda: os.system('cls') #on Windows System
 clear()
+
+
 ###GRAPH
 """G=nx.read_graphml('graph.graphml')
 data = json_graph.node_link_data(G)"""
@@ -84,12 +102,10 @@ def inizializza(num):
 def intersects(a,b,c,d,p,q,r,s):
   det = (c - a) * (s - q) - (r - p) * (d - b)
   if (det == 0):
-    #print("det 0")
     return False
   else:
     lambdA = ((s - q) * (r - a) + (p - r) * (s - b)) / det
     gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det
-    #print("lambdA: "+str(lambdA)+"\ngamma: "+str(gamma))
     return (0 < lambdA and lambdA < 1) and (0 < gamma and gamma < 1)
 def point_segment_dist(p0x, p0y, p1x, p1y, p2x, p2y):
     x_diff = p2x - p1x
@@ -129,32 +145,25 @@ def energy(v,old_x,old_y,new_x,new_y,lambda1,lambda2,lambda3,lambda4,numNodes,nu
 	##distanza tra nodi
 	u=0
 	while(u<numNodes):
-		#print("distanza tra nodi, u: "+str(u)+" v: "+str(v))
 		if (u == v):
 			u=u+1
 			continue
-		#print("a")
 		odx = old_x - fPos[u][0]
 		ody = old_y - fPos[u][1]
 		dx = new_x - fPos[u][0]
 		dy = new_y - fPos[u][1]
 		odist2 = odx * odx + ody * ody;
 		dist2 = dx * dx + dy * dy;
-		#print("odist2: "+str(odist2)+"\ndist2: "+str(dist2))
 		if(dist2==0):
 			firstDist=float("inf")
 		else:
 			firstDist=lambda1 / dist2
 		de += firstDist - lambda1 / odist2
-		#print("de: "+str(de))
 		u=u+1
-	#print("Ok")
-	##edge length
 	neis=neighbors(links, v)
 	numneis=len(neis)
 	j=0
 	while(j<numneis):
-		#print("edge length")
 		u=neis[j];
 		odx = old_x - fPos[u][0]
 		ody = old_y - fPos[u][1]
@@ -180,11 +189,6 @@ def energy(v,old_x,old_y,new_x,new_y,lambda1,lambda2,lambda3,lambda4,numNodes,nu
 			if (u1 == v or u2 == v or u1 == u or u2 == u):
 				e=e+1
 				continue
-			"""i=0
-			fine=len(fPos)-1
-			while(i<fine):
-				print(str(i)+": "+str(fPos[i][0])+", "+str(fPos[i][1]))
-				i=i+1"""
 			u1_x = fPos[u1][0]
 			u1_y = fPos[u1][1]
 			u2_x = fPos[u2][0]
@@ -281,6 +285,8 @@ def DH(graph,cooling,lambda1,lambda2,lambda3,lambda4):
 	max_y=-height/2
 	numProve = 30#3
 	density=numEdges/(numNodes*(numNodes-1))
+	vn=1/(saPhases+ftPhases)-0.01
+	wn=1-vn
 	"""lambda1 = 10000#pre: 10000
 	lambda2 = density/1000#0.0001#den/10
 	lambda3 = 10-Math.sqrt(density)#1.0#1-sqrt(den)
@@ -331,7 +337,10 @@ def DH(graph,cooling,lambda1,lambda2,lambda3,lambda4):
 		#questa azione è compiuta su tutti i nodi
 		p=0
 		while(p<numNodes):
-			progresso=str(phase/(saPhases+ftPhases)+p/(numNodes*10))
+			comp1=wn*phase/(saPhases+ftPhases)
+			comp2=vn*p/numNodes
+			totcomp=comp1+comp2
+			progresso=str(totcomp)
 			progFile= open('progress.properties',"w+")
 			progFile.write(progresso)
 			progFile.close()
@@ -383,20 +392,7 @@ def DH(graph,cooling,lambda1,lambda2,lambda3,lambda4):
 @app.route('/index.html')
 def index():
 	if request.method == 'POST':
-		print("======================0======================")
-		print("======================0======================")
-		print("======================0======================")
-		print("======================0======================")
 		storage=request.json['file']
-		"""print(storage.text)
-		print(storage)
-		print(storage)
-		print(storage)
-		print(storage)
-		print("======================1======================")
-		print("======================1======================")
-		print("======================1======================")
-		print("======================1======================")"""
 		data=json.loads(storage)
 		cooling=request.json['cooling']
 		lambda1=request.json['l1']
@@ -409,7 +405,6 @@ def index():
 		lambda2=float(lambda2.strip('"'))
 		lambda3=float(lambda3.strip('"'))
 		lambda4=float(lambda4.strip('"'))
-		print("======================A======================")
 		links=data['links']
 		nodes=data['nodes']
 		id2num={}
@@ -422,10 +417,7 @@ def index():
 		links=transform(links,id2num)
 		nodes=transformNodes(nodes,id2num)
 		start_time = time.time()
-		print(str(start_time))
 		newData={"nodes":nodes,"links":links}
-		#print(newData)
-		print("newData: "+str(newData)+"\ncooling: "+str(cooling)+"\nlambda1: "+str(lambda1)+"\nlambda2: "+str(lambda2)+"\nlambda3: "+str(lambda3)+"\nlambda4: "+str(lambda4))
 		fPos=DH(newData,cooling,10000,lambda2,lambda3,lambda4)
 		distanceFromBorder=100
 		minx=distanceFromBorder
@@ -448,7 +440,6 @@ def index():
 			n['y']=fPos[i][1]+abs(distanceFromBorder-miny)
 			i=i+1
 			newNodes.append(n)
-		print("--- %s seconds ---" % (time.time() - start_time))
 		count=0
 		for l in links:
 			for m in links:
@@ -468,21 +459,14 @@ def index():
 				if(intersects(slx,sly,tlx,tly,smx,smy,tmx,tmy)):
 					count+=1
 		newData={"nodes":newNodes,"links":links}
-		print("incroci totali: "+str(count))
-		print("fine")
 		now=datetime.datetime.now()
 		ora=str(now.hour)+"-"+str(now.minute)
 		filename="dh"+str(count)+"_"+ora
-		#print(data['nodes'])
 		saveConfiguration(filename,newData)
 		fileContent = Path('parentServer.html').read_text()
 		fileContent=fileContent.replace("@@@@@@", filename+".json")
 		imgPosX=maxX+abs(distanceFromBorder-minx)+80
 		imgPosY=((maxY+miny)+abs(distanceFromBorder-miny))/2
-		print(str(imgPosX))
-		print("=======================")
-		print(str(imgPosY))
-		print("=======================")
 		fileContent=fileContent.replace("####", str(imgPosX))
 		fileContent=fileContent.replace("###", str(imgPosY))
 		html= open('./templates/'+filename+'.html',"w+")
@@ -498,7 +482,6 @@ def index():
 			return render_template(filename)
 		elif(len(request.args)==2):
 			filename=request.args['f']
-			print(filename)
 			with open('tmp/'+filename) as json_file:
 				newData=json.load(json_file)
 			return jsonify(newData)
@@ -514,21 +497,26 @@ def image():
 @app.route('/graphml', methods = ['POST'])
 def graphml():
   storage=request.json['file']
-  print(storage)
-  print("\n======================\n")
   ml= open('./tmp/graph.graphml',"w+")
   ml.write(storage)
   ml.close()
   G=networkx.read_graphml('./tmp/graph.graphml')
   data = json_graph.node_link_data(G)
-  print(data)
   return jsonify(data)
 @app.route('/progress')
 def progress():
-  print("progress")
   progress=Path('progress.properties').read_text()
   return progress
 
+@app.route('/cprogress',methods = ['DELETE'])
+def cprogress():
+	progress= open('progress.properties',"w+")
+	progress.write('0')
+	progress.close()
+	cleanFiles('html/',10,'')
+	cleanFiles('tmp/',10,'')
+	cleanFiles("templates/",10,'index.html')
+	return "cancellazione ok"
 if __name__ == "__main__":
   app.run(threaded=True)#(port=5001)#
 

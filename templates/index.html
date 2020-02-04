@@ -18,7 +18,6 @@ bootstrapscript.type = "text/javascript";
 var bootstrapcss = document.createElement("link");
 
 online=navigator.onLine
-console.log(online)
 if (online){
   jqueryscript.src = "https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js";
 
@@ -98,7 +97,7 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
 <td>Distanza nodo-archi confinanti</td>
 <td><input type="text" min="0" name="l4" step=".000000000000001" id="l4"/></td>
 </tr>
-<tr>
+<!-- <tr>
 <td>&nbsp;</td>
 <td>Numero di rappresentazioni finali</td>
 <td><select name="numR" id="numR">
@@ -108,7 +107,7 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
   <option>4</option>
   <option>5</option>
 </select></td>
-    </tr>
+    </tr> -->
   </tbody>
 </table>
 <div class="container">
@@ -145,20 +144,15 @@ L'algoritmo utilizzato è Davidson Harel DH-96</h3>
 </div>
 <!-- </form> -->
 <script>
-
+var toFinish=true
 document.getElementById('files').addEventListener('change', handleFileSelect, false);
 function handleFileSelect(evt) {
   file = evt.target.files[0];  
   reader = new FileReader();
   reader.readAsText(file);
-  //console.log(typeof(file.name));
   reader.onload = function(e) {
   rawgraph = reader.result;
-  console.log(file.name)
-  console.log(typeof(file.name))
   if(file.name.endsWith('.graphml')){
-    //alert("ml");
-    console.log(typeof rawgraph)
       $.ajax({
       type: "POST",
       url: '/graphml',//'http://localhost:5000/dh.py',
@@ -166,22 +160,18 @@ function handleFileSelect(evt) {
       contentType: 'application/json',
       data: JSON.stringify( { "file": rawgraph} ),
       success: function(resp){
-        //console.log(resp)
         document.getElementById('filecontent').value=JSON.stringify(resp)
         graph=resp
         links=graph.links
         nodes=graph.nodes
         density=links.length/(nodes.length*(nodes.length-1))
         document.getElementById('l2').value=(density/1000).toFixed(16)
-        //console.log(density/1000)
         document.getElementById('l3').value=(10-Math.sqrt(density)).toFixed(15)
         document.getElementById('l4').value=((40-density)/5).toFixed(15)
         $('#genera').prop('disabled', false)
       },
       error: function(XMLHttpRequest, textStatus, errorThrown) {
       alert("Errore nella comunicazione con il server");
-      console.log(textStatus)
-      console.log(errorThrown)
       }
       })
   }
@@ -194,7 +184,6 @@ function handleFileSelect(evt) {
   nodes=graph.nodes
   density=links.length/(nodes.length*(nodes.length-1))
   document.getElementById('l2').value=(density/1000).toFixed(16)
-  //console.log(density/1000)
   document.getElementById('l3').value=(10-Math.sqrt(density)).toFixed(15)
   document.getElementById('l4').value=((40-density)/5).toFixed(15)
   $('#genera').prop('disabled', false)
@@ -206,51 +195,61 @@ inputs=document.getElementsByTagName('input');
 for(i=0;i<inputs.length;i++){
   curri=inputs[i]
   if(curri.type=='text' && isNaN(curri.value)){
-    console.log(curri)
     return false;
   }
 }
 return true;
 }
+function cleanProgress(){
+  $.ajax({
+    url: '/cprogress',//+ $.param({"filename": fname}),
+    type: 'DELETE',
+    success: function(result) {
+        //console.log(result)
+    },
+    error: function(XMLHttpRequest, textStatus, errorThrown) {
+      alert("Errore nella comunicazione con il server");
+      }
+});
+  
+}
 function updateProgress(now){
-  console.log("update")
   $.get( "/progress", function( data ) {
   nowUp=parseInt(data*100)
-  //nowUp=now+25
-  console.log(now+'%');
   if(nowUp>now){
-    text='<div class="progress"><div class="progress-bar" role="progressbar" style="width: '+nowUp+'%" aria-valuenow="'+nowUp+'" aria-valuemin="0" aria-valuemax="100"></div></div>'//+'<p>'+now+'%</p>'
+    text='<div class="progress"><div class="progress-bar" role="progressbar" style="width: '+nowUp+'%" aria-valuenow="'+nowUp+'" aria-valuemin="0" aria-valuemax="100"></div></div>'+'<p>'+nowUp+'%</p>'
   document.getElementById('progressbarcont').innerHTML=text
   }
-  setTimeout(function(){updateProgress(nowUp);}, 1000);
+  if(toFinish)
+    setTimeout(function(){updateProgress(nowUp);}, 1000);
+  else toFinish=true
 }).fail(function(XMLHttpRequest, textStatus, errorThrown) {
-    console.log( "error" );
+    /*console.log( "error" );
     console.log(textStatus)
-    console.log(errorThrown)
+    console.log(errorThrown)*/
 
   });
+  
 }
 function sendPost(){
-  ttt=JSON.stringify( { "file": JSON.stringify($("#filecontent").val())})
-  console.log(ttt)
-  console.log(typeof(ttt))
   $.ajax({
   type: "POST",
-  url: '/',//'http://localhost:5000/dh.py',
-  //dataType: 'json',
+  url: '/',
   type: 'post',
   contentType: 'application/json',
   data: JSON.stringify( { "file": $("#filecontent").val(),"cooling": JSON.stringify($("#cooling").val()),"l1": JSON.stringify($("#l1").val()),"l2": JSON.stringify($("#l2").val()),"l3": JSON.stringify($("#l3").val()),"l4": JSON.stringify($("#l4").val())} ),
   success: function(resp){
-    console.log("tutto ok")
+    toFinish=false
+    document.getElementById('genera').disabled=false
     document.getElementById('progressbarcont').innerHTML=""//resetto la barra
+    cleanProgress()//resetto il file di progresso
     window.open('http://localhost:5000/?f='+resp+".html")
     //window.location.href='http://localhost:5000/?f='+resp+".html"
   },
   error: function(XMLHttpRequest, textStatus, errorThrown) {
   alert("Errore nella comunicazione con il server");
-  console.log(textStatus)
-  console.log(errorThrown)
+  /*console.log(textStatus)
+  console.log(errorThrown)*/
   }
   })
 }
@@ -258,7 +257,9 @@ function sendPost(){
 function invia(el){
 controllo=checkElements();
 if(!controllo){
-  alert("I parametri devono essere numerici");
+  mesg="I parametri devono essere numerici"
+  document.getElementById("mbody").innerHTML=mesg
+  $("#infoMod").modal()
   return false
 }
 
@@ -267,12 +268,12 @@ if(!controllo){
 el.disabled=true
 document.getElementById("mbody").innerHTML='Il grafo verrà elaborato.<br>Al termine sarà possibile visualizzarlo'
 $("#infoMod").modal()
-numR=document.getElementById('numR').value;
-console.log("numR: "+numR)
-for(i=0;i<numR;i++){
+/*numR=document.getElementById('numR').value;
+for(i=0;i<numR;i++){*/
 sendPost();
-}
 updateProgress(0)
+//}
+//updateProgress(0)
 }
 function get(name){
   if(name=(new RegExp('[?&]'+encodeURIComponent(name)+'=([^&]*)')).exec(location.search))
