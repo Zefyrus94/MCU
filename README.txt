@@ -8,7 +8,7 @@ Il progetto è stato testato sui seguenti browser:
 - Mozilla Firefox versione 72.0.2
 - Google Chrome versione 79.0.3945.130
 E su sistema operativo Windows 10
-
+La versione di Python installata sul sistema e consigliata è la 3.8.1
 Il vantaggio offerto dalle rappresentazioni con DH96 rispetto al force-directed consiste nel poter migliorare alcune metriche,
 tra cui il numero di incroci, permettendo una migliore visibilità del grafo finale.
 Rappresentando infatti lo stesso grafo di 52 nodi e 152 archi utilizzato come test:
@@ -16,3 +16,6 @@ Rappresentando infatti lo stesso grafo di 52 nodi e 152 archi utilizzato come te
 aumentare il numero di incroci)
 - con l'approccio DH96 si arriva fino a 607 incroci con le iterazioni più lunghe.
 Sarà quindi sufficiente impostare un cooling factor pari a 0.51 nel caso di test per avere rappresentazioni migliori dell'approccio force directed, per quanto più lunghe in termini di tempo.
+
+Note: lo script dh.py tenterà di fare il download di alcuni moduli necessari alla sua esecuzione mediante pip, un proxy potrebbe impedirne
+l'installazione
