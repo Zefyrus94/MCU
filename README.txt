@@ -18,7 +18,7 @@ aumentare il numero di incroci)
 Sarà quindi sufficiente impostare un cooling factor pari a 0.51 nel caso di test per avere rappresentazioni migliori dell'approccio force directed, per quanto più lunghe in termini di tempo.
 
 Guida all'uso
-Lanciare da command line lo script dh.py collocato nella cartella principale per avviare il server
+Lanciare da command line lo script dh.py (py dh.py) collocato nella cartella principale per avviare il server
 Andare all'indirizzo localhost:5000/ dove si presenterà una schermata di caricamento
 Selezionare il file in formato json o graphml ed eventualmente variare i parametri
 Attendere il completamento dell'esecuzione dello script
