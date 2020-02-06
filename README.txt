@@ -17,5 +17,13 @@ aumentare il numero di incroci)
 - con l'approccio DH96 si arriva fino a 607 incroci con le iterazioni più lunghe.
 Sarà quindi sufficiente impostare un cooling factor pari a 0.51 nel caso di test per avere rappresentazioni migliori dell'approccio force directed, per quanto più lunghe in termini di tempo.
 
+Guida all'uso
+Lanciare da command line lo script dh.py collocato nella cartella principale per avviare il server
+Andare all'indirizzo localhost:5000/ dove si presenterà una schermata di caricamento
+Selezionare il file in formato json o graphml ed eventualmente variare i parametri
+Attendere il completamento dell'esecuzione dello script
+Consentire l'apertura di una nuova finestra, in cui sarà possibile visualizzare il grafo
+Azioni concesse: zoom, drag del grafo, mouse over, mouse click sui nodi, screeshot mediante html2canvas
+
 Note: lo script dh.py tenterà di fare il download di alcuni moduli necessari alla sua esecuzione mediante pip, un proxy potrebbe impedirne
 l'installazione
