@@ -19,8 +19,8 @@ Sarà quindi sufficiente impostare un cooling factor pari a 0.51 nel caso di tes
 
 Guida all'uso
 Lanciare da command line lo script dh.py (py dh.py) collocato nella cartella principale per avviare il server
-Andare all'indirizzo localhost:5000/ dove si presenterà una schermata di caricamento
-Selezionare il file in formato json o graphml ed eventualmente variare i parametri
+Andare all'indirizzo localhost:5000/ dove si presenterà una schermata che richiederà il caricamento di un file e l'impostazione di alcuni parametri
+Selezionare il file da visualizzare (in formato json o graphml) ed eventualmente variare i parametri
 Attendere il completamento dell'esecuzione dello script
 Consentire l'apertura di una nuova finestra, in cui sarà possibile visualizzare il grafo
 Azioni concesse: zoom, drag del grafo, mouse over, mouse click sui nodi, screeshot mediante html2canvas
